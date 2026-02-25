@@ -1,6 +1,10 @@
 package config
 
-import "time"
+import (
+	"fmt"
+	"github.com/ilyakaznacheev/cleanenv"
+	"time"
+)
 
 type Config struct {
 	Postgres PostgresConfig
@@ -29,4 +33,18 @@ type ParserConfig struct {
 
 type TelegramConfig struct {
 	Token string `env:"TELEGRAM_TOKEN" env-required:"true"`
+}
+
+func MustLoad() *Config {
+	cfg := Config{}
+	err := cleanenv.ReadEnv(&cfg)
+	if err != nil {
+		panic(err)
+	}
+	return &cfg
+}
+
+func (c *PostgresConfig) DSN() string {
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		c.User, c.Password, c.Host, c.Port, c.Name)
 }
