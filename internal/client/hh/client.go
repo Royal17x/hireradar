@@ -68,11 +68,11 @@ func (c *Client) FetchVacancies(ctx context.Context, query string) ([]domain.Vac
 	}
 	var vacancies []domain.Vacancy
 	for _, vacancy := range response.Items {
-		t1, err := time.Parse(time.RFC3339, vacancy.CreatedAt)
+		parsedCreatedAt, err := time.Parse(time.RFC3339, vacancy.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
-		t2, err := time.Parse(time.RFC3339, vacancy.PublishedAt)
+		parsedPublishedAt, err := time.Parse(time.RFC3339, vacancy.PublishedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -81,8 +81,8 @@ func (c *Client) FetchVacancies(ctx context.Context, query string) ([]domain.Vac
 			Title:       vacancy.Name,
 			Company:     vacancy.Employer.Name,
 			URL:         vacancy.AlternateURL,
-			PublishedAt: t1,
-			CreatedAt:   t2,
+			PublishedAt: parsedPublishedAt,
+			CreatedAt:   parsedCreatedAt,
 		}
 		if vacancy.Salary != nil {
 			from := vacancy.Salary.From
