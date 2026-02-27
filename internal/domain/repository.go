@@ -12,3 +12,8 @@ type UserRepository interface {
 	Save(ctx context.Context, user User) error
 	GetByTelegramID(ctx context.Context, tgID string) (*User, error)
 }
+
+type VacancyCache interface {
+	SetSeen(ctx context.Context, hhID string) error
+	IsSeen(ctx context.Context, hhID string) (bool, error)
+}
