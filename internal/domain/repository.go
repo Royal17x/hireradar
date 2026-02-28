@@ -20,3 +20,9 @@ type CacheRepository interface {
 type VacancyFetcher interface {
 	FetchVacancies(ctx context.Context, query string) ([]Vacancy, error)
 }
+type FilterRepository interface {
+	Save(ctx context.Context, filter Filter) error
+	GetByUserID(ctx context.Context, userID int) ([]Filter, error)
+	Update(ctx context.Context, filter Filter) error
+	Delete(ctx context.Context, id int) error
+}
