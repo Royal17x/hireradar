@@ -13,7 +13,10 @@ type UserRepository interface {
 	GetByTelegramID(ctx context.Context, tgID string) (*User, error)
 }
 
-type VacancyCache interface {
+type CacheRepository interface {
 	SetSeen(ctx context.Context, hhID string) error
 	IsSeen(ctx context.Context, hhID string) (bool, error)
+}
+type VacancyFetcher interface {
+	FetchVacancies(ctx context.Context, query string) ([]Vacancy, error)
 }
