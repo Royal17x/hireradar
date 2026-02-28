@@ -68,11 +68,11 @@ func (c *Client) FetchVacancies(ctx context.Context, query string) ([]domain.Vac
 	}
 	var vacancies []domain.Vacancy
 	for _, vacancy := range response.Items {
-		parsedCreatedAt, err := time.Parse(time.RFC3339, vacancy.CreatedAt)
+		parsedCreatedAt, err := time.Parse("2006-01-02T15:04:05-0700", vacancy.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
-		parsedPublishedAt, err := time.Parse(time.RFC3339, vacancy.PublishedAt)
+		parsedPublishedAt, err := time.Parse("2006-01-02T15:04:05-0700", vacancy.PublishedAt)
 		if err != nil {
 			return nil, err
 		}

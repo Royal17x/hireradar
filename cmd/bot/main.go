@@ -2,10 +2,18 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"github.com/Royal17x/hireradar/internal/client/hh"
 	"github.com/Royal17x/hireradar/internal/config"
+	pg "github.com/Royal17x/hireradar/internal/repository/postgres"
+	rd "github.com/Royal17x/hireradar/internal/repository/redis"
+	"github.com/Royal17x/hireradar/internal/scheduler"
+	"github.com/Royal17x/hireradar/internal/usecase"
 	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
+	"github.com/pressly/goose/v3"
 	"github.com/redis/go-redis/v9"
 	"log"
 	"os"
@@ -36,6 +44,11 @@ func main() {
 	fmt.Println("подключились к postgres")
 	defer dbPool.Close()
 
+	// migrations
+	if err = runMigrations(cfg.Postgres.DSN()); err != nil {
+		log.Fatalf("ошибка миграций: %v", err)
+	}
+
 	//Redis Conn
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port),
@@ -49,6 +62,20 @@ func main() {
 	fmt.Println("подклюлись к redis", pong)
 	defer rdb.Close()
 
+	//repositories
+	vacancyRepo := pg.NewVacancyRepository(dbPool)
+	cacheRepo := rd.NewVacancyCache(rdb)
+
+	//client
+	client := hh.New()
+
+	//usecase
+	ucase := usecase.NewVacancyUsecase(vacancyRepo, cacheRepo, client)
+
+	//scheduler
+	s := scheduler.NewScheduler(ucase, cfg.Parser.Interval, "golang")
+	go s.Start(ctx)
+
 	//TODO: parser here + start bot
 
 	//Graceful Shutdown
@@ -61,4 +88,13 @@ func main() {
 	cancel()
 
 	log.Println("gracefully завершаем")
+}
+
+func runMigrations(dsn string) error {
+	db, err := sql.Open("pgx", dsn)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	return goose.Up(db, "migrations")
 }
