@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"github.com/Royal17x/hireradar/internal/client/hh"
 	"github.com/Royal17x/hireradar/internal/config"
@@ -10,10 +9,10 @@ import (
 	rd "github.com/Royal17x/hireradar/internal/repository/redis"
 	"github.com/Royal17x/hireradar/internal/scheduler"
 	"github.com/Royal17x/hireradar/internal/usecase"
+	"github.com/Royal17x/hireradar/internal/utils"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
-	"github.com/pressly/goose/v3"
 	"github.com/redis/go-redis/v9"
 	"log"
 	"os"
@@ -45,7 +44,7 @@ func main() {
 	defer dbPool.Close()
 
 	// migrations
-	if err = runMigrations(cfg.Postgres.DSN()); err != nil {
+	if err = utils.RunMigrations(cfg.Postgres.DSN()); err != nil {
 		log.Fatalf("ошибка миграций: %v", err)
 	}
 
@@ -88,13 +87,4 @@ func main() {
 	cancel()
 
 	log.Println("gracefully завершаем")
-}
-
-func runMigrations(dsn string) error {
-	db, err := sql.Open("pgx", dsn)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-	return goose.Up(db, "migrations")
 }
