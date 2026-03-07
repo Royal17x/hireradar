@@ -27,7 +27,7 @@ VALUES ($1, $2, $3, $4)`
 
 func (f *FilterRepo) GetByUserID(ctx context.Context, userID int) ([]domain.Filter, error) {
 	query := `
-SELECT id, user_id, keywords, city, grade
+SELECT id, user_id, keywords, city, grade, created_at
 FROM filters
 WHERE user_id = $1`
 	rows, err := f.db.Query(ctx, query, &userID)
@@ -38,7 +38,7 @@ WHERE user_id = $1`
 	var filters []domain.Filter
 	for rows.Next() {
 		var filter domain.Filter
-		rows.Scan(&filter.ID, &filter.UserID, &filter.Keywords, &filter.City, &filter.Grade)
+		rows.Scan(&filter.ID, &filter.UserID, &filter.Keywords, &filter.City, &filter.Grade, &filter.CreatedAt)
 		filters = append(filters, filter)
 	}
 	if err = rows.Err(); err != nil {

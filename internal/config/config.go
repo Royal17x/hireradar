@@ -29,6 +29,7 @@ type RedisConfig struct {
 
 type ParserConfig struct {
 	Interval time.Duration `env:"PARSER_INTERVAL" env-default:"30m"`
+	Query    string        `env:"PARSER_QUERY" env-required:"false" env-default:""`
 }
 
 type TelegramConfig struct {

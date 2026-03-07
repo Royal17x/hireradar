@@ -28,11 +28,11 @@ VALUES ($1, $2, $3, $4)`
 }
 
 func (r *UserRepository) GetByTelegramID(ctx context.Context, tgID string) (*domain.User, error) {
-	query := `SELECT telegram_id, username, is_active, created_at
+	query := `SELECT user_id, telegram_id, username, is_active, created_at
 FROM users 
 WHERE telegram_id=$1;`
 	user := domain.User{}
-	err := r.db.QueryRow(ctx, query, tgID).Scan(&user.TgID, &user.Username, &user.IsActive, &user.CreatedAt)
+	err := r.db.QueryRow(ctx, query, tgID).Scan(&user.UserID, &user.TgID, &user.Username, &user.IsActive, &user.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil

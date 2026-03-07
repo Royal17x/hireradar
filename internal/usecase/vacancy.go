@@ -35,13 +35,11 @@ func (u *VacancyUsecase) FetchAndStore(ctx context.Context, query string) error 
 			return err
 		}
 		if seen {
-			logger.Debug("Vacancy already seen", "hh_id", vacancy.HhID)
 			continue
 		}
 		v := vacancy
 		if err = u.vacancyRepo.Save(ctx, &v); err != nil {
 			if isUniqueViolation(err) {
-				logger.Info("Redis have not found hh_id after restart")
 				continue
 			}
 			logger.Error("Error storing vacancy", "err", err)

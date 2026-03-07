@@ -79,7 +79,7 @@ func main() {
 	ucase := usecase.NewVacancyUsecase(vacancyRepo, cacheRepo, client)
 
 	// Scheduler
-	s := scheduler.NewScheduler(ucase, cfg.Parser.Interval, "golang")
+	s := scheduler.NewScheduler(ucase, cfg.Parser.Interval, cfg.Parser.Query)
 	go s.Start(ctx)
 
 	// Bot

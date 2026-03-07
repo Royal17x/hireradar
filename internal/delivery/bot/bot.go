@@ -34,6 +34,10 @@ func NewBot(token string, vacancyUcase *usecase.VacancyUsecase, userRepo domain.
 
 	b.Handle("/start", bot.handleStart)
 	b.Handle("/vacancies", bot.handleVacancies)
+	b.Handle("/setfilter", bot.handleSetFilter)
+	b.Handle("/filter", bot.handleFilter)
+	b.Handle("/deletefilter", bot.handleDeleteFilter)
+
 	return bot, nil
 }
 
