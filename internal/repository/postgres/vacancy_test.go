@@ -44,7 +44,8 @@ func TestVacancyRepository(t *testing.T) {
 	t.Run("save - сохраняет вакансию", func(t *testing.T) {
 		vacancy := domain.Vacancy{
 			HhID:        "123",
-			Title:       "golang dev",
+			Title:       "golang dev Junior",
+			City:        "Москва",
 			Company:     "yandex",
 			URL:         "https://golang.org",
 			PublishedAt: time.Now(),
@@ -59,7 +60,7 @@ func TestVacancyRepository(t *testing.T) {
 	t.Run("save - дубль не сохраняется", func(t *testing.T) {
 		vacancy := domain.Vacancy{
 			HhID:        "123",
-			Title:       "golang dev",
+			Title:       "golang dev Junior",
 			Company:     "yandex",
 			URL:         "https://golang.org",
 			PublishedAt: time.Now(),
@@ -87,5 +88,32 @@ func TestVacancyRepository(t *testing.T) {
 		exists, err := vacancyRepo.Exists(ctx, "123")
 		require.NoError(t, err)
 		require.True(t, exists)
+	})
+
+	t.Run("getFiltered - находит по keywords", func(t *testing.T) {
+		vacancies, err := vacancyRepo.GetFiltered(ctx, "golang", "", "")
+		require.NoError(t, err)
+		require.True(t, len(vacancies) > 0)
+		require.Equal(t, "golang dev Junior", vacancies[0].Title)
+	})
+
+	t.Run("getFiltered - нет совпадений", func(t *testing.T) {
+		vacancies, err := vacancyRepo.GetFiltered(ctx, "уборщик", "", "")
+		require.NoError(t, err)
+		require.Empty(t, vacancies)
+	})
+
+	t.Run("getFiltered - находит по city", func(t *testing.T) {
+		vacancies, err := vacancyRepo.GetFiltered(ctx, "", "москва", "")
+		require.NoError(t, err)
+		require.True(t, len(vacancies) > 0)
+		require.Equal(t, "golang dev Junior", vacancies[0].Title)
+
+	})
+	t.Run("getFiltered - находит по grade", func(t *testing.T) {
+		vacancies, err := vacancyRepo.GetFiltered(ctx, "", "", "junior")
+		require.NoError(t, err)
+		require.True(t, len(vacancies) > 0)
+		require.Equal(t, "golang dev Junior", vacancies[0].Title)
 	})
 }

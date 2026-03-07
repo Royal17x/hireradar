@@ -72,6 +72,36 @@ func (_m *VacancyRepository) GetAll(ctx context.Context) ([]domain.Vacancy, erro
 	return r0, r1
 }
 
+// GetFiltered provides a mock function with given fields: ctx, keywords, city, grade
+func (_m *VacancyRepository) GetFiltered(ctx context.Context, keywords string, city string, grade string) ([]domain.Vacancy, error) {
+	ret := _m.Called(ctx, keywords, city, grade)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetFiltered")
+	}
+
+	var r0 []domain.Vacancy
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) ([]domain.Vacancy, error)); ok {
+		return rf(ctx, keywords, city, grade)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) []domain.Vacancy); ok {
+		r0 = rf(ctx, keywords, city, grade)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]domain.Vacancy)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
+		r1 = rf(ctx, keywords, city, grade)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Save provides a mock function with given fields: ctx, vacancy
 func (_m *VacancyRepository) Save(ctx context.Context, vacancy *domain.Vacancy) error {
 	ret := _m.Called(ctx, vacancy)

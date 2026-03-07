@@ -58,6 +58,7 @@ func TestFetch(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			vacancyRepo := mocks.NewVacancyRepository(t)
 			cacheRepo := mocks.NewCacheRepository(t)
+			filterRepo := mocks.NewFilterRepository(t)
 			fetcher := mocks.NewVacancyFetcher(t)
 
 			fetcher.On("FetchVacancies", mock.Anything, "golang").
@@ -77,7 +78,7 @@ func TestFetch(t *testing.T) {
 			}
 
 			// act
-			ucase := NewVacancyUsecase(vacancyRepo, cacheRepo, fetcher)
+			ucase := NewVacancyUsecase(vacancyRepo, cacheRepo, filterRepo, fetcher)
 			err := ucase.FetchAndStore(context.Background(), "golang")
 
 			// assert
