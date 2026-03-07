@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Royal17x/hireradar/internal/client/hh"
 	"github.com/Royal17x/hireradar/internal/config"
+	"github.com/Royal17x/hireradar/internal/delivery/bot"
 	pg "github.com/Royal17x/hireradar/internal/repository/postgres"
 	rd "github.com/Royal17x/hireradar/internal/repository/redis"
 	"github.com/Royal17x/hireradar/internal/scheduler"
@@ -64,6 +65,8 @@ func main() {
 	//repositories
 	vacancyRepo := pg.NewVacancyRepository(dbPool)
 	cacheRepo := rd.NewVacancyCache(rdb)
+	userRepo := pg.NewUserRepository(dbPool)
+	filterRepo := pg.NewFilterRepo(dbPool)
 
 	//client
 	client := hh.New()
@@ -75,7 +78,12 @@ func main() {
 	s := scheduler.NewScheduler(ucase, cfg.Parser.Interval, "golang")
 	go s.Start(ctx)
 
-	//TODO: parser here + start bot
+	//bot
+	tgBot, err := bot.NewBot(cfg.Telegram.Token, ucase, userRepo, filterRepo)
+	if err != nil {
+		log.Fatal(err)
+	}
+	go tgBot.Start()
 
 	//Graceful Shutdown
 	quit := make(chan os.Signal, 1)
