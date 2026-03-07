@@ -11,13 +11,15 @@ import (
 type VacancyUsecase struct {
 	vacancyRepo domain.VacancyRepository
 	cacheRepo   domain.CacheRepository
+	filterRepo  domain.FilterRepository
 	fetcher     domain.VacancyFetcher
 }
 
-func NewVacancyUsecase(vacancyRepo domain.VacancyRepository, cacheRepo domain.CacheRepository, fetcher domain.VacancyFetcher) *VacancyUsecase {
+func NewVacancyUsecase(vacancyRepo domain.VacancyRepository, cacheRepo domain.CacheRepository, filterRepo domain.FilterRepository, fetcher domain.VacancyFetcher) *VacancyUsecase {
 	return &VacancyUsecase{
 		vacancyRepo: vacancyRepo,
 		cacheRepo:   cacheRepo,
+		filterRepo:  filterRepo,
 		fetcher:     fetcher,
 	}
 }
@@ -52,6 +54,18 @@ func (u *VacancyUsecase) FetchAndStore(ctx context.Context, query string) error 
 		}
 	}
 	return nil
+}
+
+func (u *VacancyUsecase) GetFiltered(ctx context.Context, userID int) ([]domain.Vacancy, error) {
+	filters, err := u.filterRepo.GetByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	if len(filters) == 0 {
+		return u.vacancyRepo.GetAll(ctx)
+	}
+	f := filters[0]
+	return u.vacancyRepo.GetFiltered(ctx, f.Keywords, f.City, f.Grade)
 }
 
 func (u *VacancyUsecase) GetAll(ctx context.Context) ([]domain.Vacancy, error) {

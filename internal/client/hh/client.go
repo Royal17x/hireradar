@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/Royal17x/hireradar/internal/domain"
+	logger "github.com/charmbracelet/log"
 	"net/http"
 	"time"
 )
@@ -29,11 +30,16 @@ type hhResponse struct {
 type hhVacancy struct {
 	ID           string     `json:"id"`
 	Name         string     `json:"name"`
+	Area         hhArea     `json:"area"`
 	Employer     hhEmployer `json:"employer"`
 	Salary       *hhSalary  `json:"salary"`
 	AlternateURL string     `json:"alternate_url"`
 	PublishedAt  string     `json:"published_at"`
 	CreatedAt    string     `json:"created_at"`
+}
+
+type hhArea struct {
+	Name string `json:"name"`
 }
 
 type hhEmployer struct {
@@ -52,7 +58,6 @@ func (c *Client) FetchVacancies(ctx context.Context, query string) ([]domain.Vac
 	}
 	q := req.URL.Query()
 	q.Add("text", query)
-	q.Add("area", "1")
 	q.Add("per_page", "100")
 	req.URL.RawQuery = q.Encode()
 
@@ -79,6 +84,7 @@ func (c *Client) FetchVacancies(ctx context.Context, query string) ([]domain.Vac
 		v := domain.Vacancy{
 			HhID:        vacancy.ID,
 			Title:       vacancy.Name,
+			City:        vacancy.Area.Name,
 			Company:     vacancy.Employer.Name,
 			URL:         vacancy.AlternateURL,
 			PublishedAt: parsedPublishedAt,
@@ -92,5 +98,6 @@ func (c *Client) FetchVacancies(ctx context.Context, query string) ([]domain.Vac
 		}
 		vacancies = append(vacancies, v)
 	}
+	logger.Info("Fetched vacancies", "count", len(vacancies))
 	return vacancies, nil
 }

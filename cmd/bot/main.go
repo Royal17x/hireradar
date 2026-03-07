@@ -76,7 +76,7 @@ func main() {
 	client := hh.New()
 
 	// Usecase
-	ucase := usecase.NewVacancyUsecase(vacancyRepo, cacheRepo, client)
+	ucase := usecase.NewVacancyUsecase(vacancyRepo, cacheRepo, filterRepo, client)
 
 	// Scheduler
 	s := scheduler.NewScheduler(ucase, cfg.Parser.Interval, cfg.Parser.Query)

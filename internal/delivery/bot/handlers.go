@@ -38,7 +38,19 @@ func (b *Bot) handleStart(c telebot.Context) error {
 }
 
 func (b *Bot) handleVacancies(c telebot.Context) error {
-	vacancies, err := b.vacancyUcase.GetAll(context.Background())
+	ctx := context.Background()
+	tgID := strconv.FormatInt(c.Sender().ID, 10)
+	user, err := b.userRepo.GetByTelegramID(ctx, tgID)
+	if err != nil {
+		logger.Error("Failed to get user by telegram ID", "tgID", tgID, "err", err)
+		return c.Send("Что-то пошло не так")
+	}
+	if user == nil {
+		logger.Warn("User have not said /start", "tgID", tgID)
+		return c.Send("Нажмите /start для начала работы")
+	}
+
+	vacancies, err := b.vacancyUcase.GetFiltered(ctx, user.UserID)
 	if err != nil {
 		logger.Error("Failed to get all vacancies", "err", err)
 		return c.Send("Ошибка при получении вакансий")

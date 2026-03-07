@@ -6,6 +6,7 @@ type VacancyRepository interface {
 	Save(ctx context.Context, vacancy *Vacancy) error
 	Exists(ctx context.Context, hhID string) (bool, error)
 	GetAll(ctx context.Context) ([]Vacancy, error)
+	GetFiltered(ctx context.Context, keywords, city, grade string) ([]Vacancy, error)
 }
 
 type UserRepository interface {
