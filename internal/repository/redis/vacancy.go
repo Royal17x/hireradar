@@ -14,11 +14,11 @@ func NewVacancyCache(redisClient *redis.Client) *VacancyCache {
 	return &VacancyCache{redisClient: redisClient}
 }
 
-func vacancyKey(hhID string) string {
+func VacancyKey(hhID string) string {
 	return "vacancy:" + hhID
 }
 func (v *VacancyCache) SetSeen(ctx context.Context, hhID string) error {
-	_, err := v.redisClient.SetNX(ctx, vacancyKey(hhID), 1, 24*time.Hour).Result()
+	_, err := v.redisClient.SetNX(ctx, VacancyKey(hhID), 1, 24*time.Hour).Result()
 	if err != nil {
 		return err
 	}
@@ -26,7 +26,7 @@ func (v *VacancyCache) SetSeen(ctx context.Context, hhID string) error {
 }
 
 func (v *VacancyCache) IsSeen(ctx context.Context, hhID string) (bool, error) {
-	count, err := v.redisClient.Exists(ctx, vacancyKey(hhID)).Result()
+	count, err := v.redisClient.Exists(ctx, VacancyKey(hhID)).Result()
 	if err != nil {
 		return false, err
 	}

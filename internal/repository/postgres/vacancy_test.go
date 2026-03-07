@@ -15,8 +15,8 @@ import (
 )
 
 func TestVacancyRepository(t *testing.T) {
-	ctx := context.Background()
 	t.Setenv("TESTCONTAINERS_RYUK_DISABLED", "true")
+	ctx := context.Background()
 	pgContainer, err := pg.Run(ctx,
 		"postgres:16-alpine",
 		pg.WithDatabase("testdb"),
