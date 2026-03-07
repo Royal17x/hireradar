@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Royal17x/hireradar/internal/domain"
+	logger "github.com/charmbracelet/log"
 	"gopkg.in/telebot.v3"
 	"strconv"
 	"strings"
@@ -16,7 +17,8 @@ func (b *Bot) handleStart(c telebot.Context) error {
 	tgUs := c.Sender().Username
 	user, err := b.userRepo.GetByTelegramID(ctx, tgID)
 	if err != nil {
-		return c.Send("произошла ошибка, попробуйте позже")
+		logger.Error("Failed to get user by telegram ID", "tgID", tgID, "err", err)
+		return c.Send("Произошла ошибка, попробуйте позже")
 	}
 	if user == nil {
 		user = &domain.User{
@@ -26,19 +28,23 @@ func (b *Bot) handleStart(c telebot.Context) error {
 			CreatedAt: time.Now(),
 		}
 		if err = b.userRepo.Save(ctx, *user); err != nil {
-			return c.Send("произошла ошибка пре регистрации")
+			logger.Error("Failed to save user", "tgID", tgID, "err", err)
+			return c.Send("Произошла ошибка пре регистрации")
 		}
+		logger.Info("User created", "tgID", tgID)
 	}
-	return c.Send("привет, это бот с удобным поиском вакансий, рад тебя приветствовать!")
+	return c.Send("Привет, это бот с удобным поиском вакансий, рад тебя приветствовать!")
 }
 
 func (b *Bot) handleVacancies(c telebot.Context) error {
 	vacancies, err := b.vacancyUcase.GetAll(context.Background())
 	if err != nil {
-		return c.Send("ошибка при получении вакансий")
+		logger.Error("Failed to get all vacancies", "err", err)
+		return c.Send("Ошибка при получении вакансий")
 	}
 	if len(vacancies) == 0 {
-		return c.Send("вакансий пока нет")
+		logger.Warn("No vacancies found")
+		return c.Send("Вакансий пока нет")
 	}
 
 	var sb strings.Builder

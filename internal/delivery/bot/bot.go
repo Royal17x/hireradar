@@ -3,6 +3,7 @@ package bot
 import (
 	"github.com/Royal17x/hireradar/internal/domain"
 	"github.com/Royal17x/hireradar/internal/usecase"
+	logger "github.com/charmbracelet/log"
 	"gopkg.in/telebot.v3"
 	"time"
 )
@@ -21,6 +22,7 @@ func NewBot(token string, vacancyUcase *usecase.VacancyUsecase, userRepo domain.
 	}
 	b, err := telebot.NewBot(pref)
 	if err != nil {
+		logger.Error("Failed to create telebot instance", "err", err)
 		return nil, err
 	}
 	bot := &Bot{

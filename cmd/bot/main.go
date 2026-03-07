@@ -11,29 +11,33 @@ import (
 	"github.com/Royal17x/hireradar/internal/scheduler"
 	"github.com/Royal17x/hireradar/internal/usecase"
 	"github.com/Royal17x/hireradar/internal/utils"
+	logger "github.com/charmbracelet/log"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 )
 
 func main() {
-	//Load env variables
+	// Init logger
+	logger.SetLevel(logger.DebugLevel)
+	logger.SetReportCaller(true)
+
+	// Load env variables
 	if err := godotenv.Load(); err != nil {
-		log.Println("не найден .env файл с env variables")
+		logger.Warn("Not found .env file")
 	}
 
-	//Load Conf
+	// Load Conf
 	cfg := config.MustLoad()
 
-	//Init ctx
+	// Init ctx
 	ctx, cancel := context.WithCancel(context.Background())
 
-	//Postgres Conn
+	// Postgres Conn
 	dbPool, err := pgxpool.New(ctx, cfg.Postgres.DSN())
 	if err != nil {
 		panic(err)
@@ -41,15 +45,15 @@ func main() {
 	if err = dbPool.Ping(ctx); err != nil {
 		panic(err)
 	}
-	fmt.Println("подключились к postgres")
+	logger.Info("Connected to PostgreSQL")
 	defer dbPool.Close()
 
-	// migrations
+	// Migrations
 	if err = utils.RunMigrations(cfg.Postgres.DSN()); err != nil {
-		log.Fatalf("ошибка миграций: %v", err)
+		logger.Error("Migration error", "err", err)
 	}
 
-	//Redis Conn
+	// Redis Conn
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port),
 		Password: cfg.Redis.Password,
@@ -59,40 +63,41 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("подклюлись к redis", pong)
+	logger.Info("Connected to Redis", "response", pong)
 	defer rdb.Close()
 
-	//repositories
+	// Repositories
 	vacancyRepo := pg.NewVacancyRepository(dbPool)
 	cacheRepo := rd.NewVacancyCache(rdb)
 	userRepo := pg.NewUserRepository(dbPool)
 	filterRepo := pg.NewFilterRepo(dbPool)
 
-	//client
+	// Client
 	client := hh.New()
 
-	//usecase
+	// Usecase
 	ucase := usecase.NewVacancyUsecase(vacancyRepo, cacheRepo, client)
 
-	//scheduler
+	// Scheduler
 	s := scheduler.NewScheduler(ucase, cfg.Parser.Interval, "golang")
 	go s.Start(ctx)
 
-	//bot
+	// Bot
 	tgBot, err := bot.NewBot(cfg.Telegram.Token, ucase, userRepo, filterRepo)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error("Bot connection error", "err", err)
+		os.Exit(1)
 	}
 	go tgBot.Start()
 
-	//Graceful Shutdown
+	// Graceful Shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
-	log.Println("бот запущен")
+	logger.Info("Bot started")
 
 	<-quit
 	cancel()
 
-	log.Println("gracefully завершаем")
+	logger.Info("Gracefully shutting down...")
 }

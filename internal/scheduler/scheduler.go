@@ -3,7 +3,7 @@ package scheduler
 import (
 	"context"
 	"github.com/Royal17x/hireradar/internal/usecase"
-	"log"
+	logger "github.com/charmbracelet/log"
 	"time"
 )
 
@@ -24,18 +24,20 @@ func NewScheduler(usecase *usecase.VacancyUsecase, interval time.Duration, query
 func (s *Scheduler) Start(ctx context.Context) {
 	ticker := time.NewTicker(s.interval)
 	defer ticker.Stop()
+	logger.Infof("Starting scheduler with interval %v", s.interval)
 	err := s.usecase.FetchAndStore(ctx, s.query)
 	if err != nil {
-		log.Printf("ошибка сбора и хранения вакансий: %v", err)
+		logger.Error("Fetch and store vacancies error", "err", err)
 	}
 	for {
 		select {
 		case <-ticker.C:
 			err = s.usecase.FetchAndStore(ctx, s.query)
 			if err != nil {
-				log.Printf("ошибка сбора и хранения вакансий: %v", err)
+				logger.Error("Fetch and store vacancies error", "err", err)
 			}
 		case <-ctx.Done():
+			logger.Info("Shutting down scheduler...")
 			return
 		}
 
