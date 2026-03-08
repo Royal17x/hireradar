@@ -47,7 +47,9 @@ WHERE hh_id = $1;`
 
 func (v *VacancyRepository) GetAll(ctx context.Context) ([]domain.Vacancy, error) {
 	query := `SELECT  hh_id, title, city, company, url, salary_from, salary_to, published_at, created_at
-FROM vacancies;`
+FROM vacancies
+ORDER BY RANDOM()
+LIMIT 10;`
 	rows, err := v.db.Query(ctx, query)
 	if err != nil {
 		return nil, err
@@ -87,7 +89,7 @@ func (v *VacancyRepository) GetFiltered(ctx context.Context, keywords, city, gra
 	}
 	query := `SELECT  hh_id, title, city, company, url, salary_from, salary_to, published_at, created_at
 FROM vacancies
-WHERE ` + strings.Join(conditions, " AND ")
+WHERE ` + strings.Join(conditions, " AND ") + " ORDER BY RANDOM() LIMIT 10;"
 
 	var vacancies []domain.Vacancy
 	rows, err := v.db.Query(ctx, query, args...)
