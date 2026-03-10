@@ -27,3 +27,8 @@ type FilterRepository interface {
 	Update(ctx context.Context, filter Filter) error
 	Delete(ctx context.Context, id int) error
 }
+
+type AccountRepository interface {
+	Save(ctx context.Context, account Account) (int, error)
+	GetByEmail(ctx context.Context, email string) (*Account, error)
+}

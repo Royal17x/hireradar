@@ -11,7 +11,12 @@ type Config struct {
 	Redis    RedisConfig
 	Telegram TelegramConfig
 	Parser   ParserConfig
+	JWT      JWTConfig
 }
+type JWTConfig struct {
+	Secret string `env:"JWT_SECRET" env-required:"true"`
+}
+
 type PostgresConfig struct {
 	Name     string `env:"PG_DB" env-required:"true"`
 	Host     string `env:"PG_HOST" env-required:"true"`

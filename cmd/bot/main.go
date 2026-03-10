@@ -6,6 +6,7 @@ import (
 	"github.com/Royal17x/hireradar/internal/client/hh"
 	"github.com/Royal17x/hireradar/internal/config"
 	"github.com/Royal17x/hireradar/internal/delivery/bot"
+	server "github.com/Royal17x/hireradar/internal/delivery/http"
 	pg "github.com/Royal17x/hireradar/internal/repository/postgres"
 	rd "github.com/Royal17x/hireradar/internal/repository/redis"
 	"github.com/Royal17x/hireradar/internal/scheduler"
@@ -71,6 +72,7 @@ func main() {
 	cacheRepo := rd.NewVacancyCache(rdb)
 	userRepo := pg.NewUserRepository(dbPool)
 	filterRepo := pg.NewFilterRepo(dbPool)
+	accountRepo := pg.NewAccountRepo(dbPool)
 
 	// Client
 	client := hh.New()
@@ -90,11 +92,20 @@ func main() {
 	}
 	go tgBot.Start()
 
+	//Server
+	serv := server.NewServer(ucase, userRepo, filterRepo, accountRepo, cfg.JWT.Secret)
+	go func() {
+		if err := serv.Run(":8080"); err != nil {
+			logger.Error("Server run error", "err", err)
+		}
+	}()
+
 	// Graceful Shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	logger.Info("Bot started")
+	logger.Info("Server started")
 
 	<-quit
 	cancel()
