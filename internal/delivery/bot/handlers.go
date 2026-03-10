@@ -125,8 +125,13 @@ func (b *Bot) handleFilter(c telebot.Context) error {
 
 	var sb strings.Builder
 	for i, filter := range filters {
-		sb.WriteString(fmt.Sprintf("*Фильтр №%d* (ID: %d)\nКлючевые слова: %s\nГород: %s\nГрейд: %s\nСоздан: %s\n\n",
-			i+1, filter.ID, filter.Keywords, filter.City, filter.Grade, filter.CreatedAt.Format("02.01.2006")))
+		checkMark := "\U00002705"
+		active := ""
+		if i == 0 {
+			active = checkMark + " активный"
+		}
+		sb.WriteString(fmt.Sprintf("*Фильтр №%d*%s (ID: %d)\nКлючевые слова: %s\nГород: %s\nГрейд: %s\nСоздан: %s\n\n",
+			i+1, active, filter.ID, filter.Keywords, filter.City, filter.Grade, filter.CreatedAt.Format("02.01.2006")))
 	}
 	logger.Info("Filters are successfully showed")
 	return c.Send(sb.String(), telebot.ModeMarkdown)

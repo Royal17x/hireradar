@@ -156,6 +156,14 @@ func (s *Server) handleSetFilter(c *gin.Context) {
 }
 
 func (s *Server) handleGetFilters(c *gin.Context) {
+	type filterResponse struct {
+		ID       int    `json:"id"`
+		Keywords string `json:"keywords"`
+		City     string `json:"city"`
+		Grade    string `json:"grade"`
+		Active   bool   `json:"active"`
+	}
+	var response []filterResponse
 	userID := c.GetInt("user_id")
 	filters, err := s.filterRepo.GetByUserID(c, userID)
 	if err != nil {
@@ -163,8 +171,17 @@ func (s *Server) handleGetFilters(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error getting filters"})
 		return
 	}
+	for i, f := range filters {
+		response = append(response, filterResponse{
+			ID:       f.ID,
+			Keywords: f.Keywords,
+			City:     f.City,
+			Grade:    f.Grade,
+			Active:   i == 0,
+		})
+	}
 	logger.Info("Filters are successfully retrieved")
-	c.JSON(http.StatusOK, gin.H{"filters": filters})
+	c.JSON(http.StatusOK, gin.H{"filters": response})
 }
 
 func (s *Server) handleDeleteFilter(c *gin.Context) {
