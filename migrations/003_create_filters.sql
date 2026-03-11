@@ -13,3 +13,4 @@ CREATE INDEX idx_user_id ON filters (user_id);
 CREATE INDEX idx_keywords ON filters
 USING GIN (to_tsvector('russian', keywords));
 -- +goose Down
+DROP TABLE filters;

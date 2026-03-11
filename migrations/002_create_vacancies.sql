@@ -13,3 +13,4 @@ CREATE TABLE vacancies(
 CREATE INDEX idx_vacancy_title ON vacancies
 USING GIN (to_tsvector('russian', title));
 -- +goose Down
+DROP TABLE vacancies;

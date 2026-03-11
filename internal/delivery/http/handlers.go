@@ -115,7 +115,7 @@ func (s *Server) handleLogin(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"token": tokenStr})
 }
 
-func (s *Server) handleVacancies(c *gin.Context) {
+func (s *Server) handleGetVacancies(c *gin.Context) {
 	userID := c.GetInt("user_id")
 	vacancies, err := s.vacancyUcase.GetFiltered(c, userID)
 	if err != nil {
@@ -200,4 +200,96 @@ func (s *Server) handleDeleteFilter(c *gin.Context) {
 	}
 	logger.Info("Filter successfully deleted")
 	c.JSON(http.StatusOK, gin.H{"filter": nil})
+}
+
+func (s *Server) handleAddFavorite(c *gin.Context) {
+	var req struct {
+		HhID string `json:"hh_id" binding:"required"`
+	}
+	accountID := c.GetInt("user_id")
+	if err := c.ShouldBindJSON(&req); err != nil {
+		logger.Error("Wrong request", "error", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка получения запроса"})
+		return
+	}
+	newFavorite := domain.Favorite{
+		AccountID: accountID,
+		HhID:      req.HhID,
+	}
+	err := s.favoriteRepo.Save(c, newFavorite)
+	if err != nil {
+		logger.Error("Error adding favorite", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка добавления избранной вакансии"})
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"favorite": newFavorite})
+}
+
+func (s *Server) handleGetFavorites(c *gin.Context) {
+	accountID := c.GetInt("user_id")
+	favorites, err := s.favoriteRepo.GetByAccountID(c, accountID)
+	if err != nil {
+		logger.Error("Error getting favorites", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения избранных вакансий"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"favorites": favorites})
+}
+
+func (s *Server) handleDeleteFavorite(c *gin.Context) {
+	favoriteID := c.Param("hh_id")
+	accountID := c.GetInt("user_id")
+	err := s.favoriteRepo.Delete(c, accountID, favoriteID)
+	if err != nil {
+		logger.Error("Error deleting favorite", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка удаления избранной вакансии"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"favorite": nil})
+}
+
+func (s *Server) handleProfile(c *gin.Context) {
+	accountID := c.GetInt("user_id")
+	account, err := s.accountRepo.GetByID(c, accountID)
+	if err != nil {
+		logger.Error("Error getting account", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения профиля"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"email":      account.Email,
+		"created_at": account.CreatedAt,
+	})
+}
+
+func (s *Server) handleRefreshVacancies(c *gin.Context) {
+	err := s.vacancyUcase.FetchAndStore(c, s.parserQuery)
+	if err != nil {
+		logger.Error("Error fetching vacancies", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения вакансий"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Вакансии обновлены"})
+}
+
+func (s *Server) handleStats(c *gin.Context) {
+	count, topCities, err := s.vacancyUcase.GetStats(c)
+	if err != nil {
+		logger.Error("Error getting stats", "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения статистики"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"count": count, "top_cities": topCities})
+}
+
+func (s *Server) handleGetVacancy(c *gin.Context) {
+	hhID := c.Param("hh_id")
+	vacancy, err := s.vacancyUcase.GetByHhID(c, hhID)
+	if err != nil {
+		logger.Error("Error getting vacancy", "error", err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Вакансия не найдена"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"vacancy": vacancy})
 }

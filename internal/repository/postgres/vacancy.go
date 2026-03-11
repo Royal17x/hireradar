@@ -2,8 +2,10 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/Royal17x/hireradar/internal/domain"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"strings"
 )
@@ -105,4 +107,43 @@ WHERE ` + strings.Join(conditions, " AND ") + " ORDER BY RANDOM() LIMIT 10;"
 		return nil, err
 	}
 	return vacancies, nil
+}
+
+func (v *VacancyRepository) GetStats(ctx context.Context) (count int, topCities []string, err error) {
+	countQuery := `SELECT COUNT(*) FROM vacancies;`
+	err = v.db.QueryRow(ctx, countQuery).Scan(&count)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, nil, err
+		}
+		return 0, nil, err
+	}
+	cityQuery := `SELECT city, COUNT(*) as cnt
+FROM vacancies
+GROUP BY city
+ORDER BY cnt DESC
+LIMIT 5;`
+	rows, err := v.db.Query(ctx, cityQuery)
+	if err != nil {
+		return 0, nil, err
+	}
+	for rows.Next() {
+		var city string
+		var cnt int
+		if err = rows.Scan(&city, &cnt); err != nil {
+			return 0, nil, err
+		}
+		topCities = append(topCities, city)
+	}
+	return count, topCities, nil
+}
+
+func (v *VacancyRepository) GetByHhID(ctx context.Context, hhID string) (vacancy domain.Vacancy, err error) {
+	query := `SELECT  hh_id, title, city, company, url, salary_from, salary_to, published_at, created_at
+FROM vacancies
+WHERE hh_id = $1;`
+	if err = v.db.QueryRow(ctx, query, hhID).Scan(&vacancy.HhID, &vacancy.Title, &vacancy.City, &vacancy.Company, &vacancy.URL, &vacancy.SalaryFrom, &vacancy.SalaryTo, &vacancy.PublishedAt, &vacancy.CreatedAt); err != nil {
+		return domain.Vacancy{}, err
+	}
+	return vacancy, nil
 }

@@ -72,6 +72,14 @@ func (u *VacancyUsecase) GetAll(ctx context.Context) ([]domain.Vacancy, error) {
 	return u.vacancyRepo.GetAll(ctx)
 }
 
+func (u *VacancyUsecase) GetStats(ctx context.Context) (count int, topCities []string, err error) {
+	return u.vacancyRepo.GetStats(ctx)
+}
+
+func (u *VacancyUsecase) GetByHhID(ctx context.Context, hhID string) (domain.Vacancy, error) {
+	return u.vacancyRepo.GetByHhID(ctx, hhID)
+}
+
 func isUniqueViolation(err error) bool {
 	var pgErr *pgconn.PgError
 	return errors.As(err, &pgErr) && pgErr.Code == "23505"

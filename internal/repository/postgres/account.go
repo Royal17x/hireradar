@@ -41,3 +41,18 @@ WHERE email=$1;`
 	}
 	return account, nil
 }
+
+func (a *AccountRepo) GetByID(ctx context.Context, id int) (*domain.Account, error) {
+	query := `SELECT id, email, password_hash, created_at
+FROM accounts
+WHERE id=$1;`
+	account := &domain.Account{}
+	err := a.dbPool.QueryRow(ctx, query, id).Scan(&account.ID, &account.Email, &account.PasswordHash, &account.CreatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return account, nil
+}

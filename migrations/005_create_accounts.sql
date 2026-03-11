@@ -6,3 +6,4 @@ CREATE TABLE accounts (
     created_at TIMESTAMP DEFAULT NOW()
 );
 -- +goose Down
+DROP TABLE accounts;

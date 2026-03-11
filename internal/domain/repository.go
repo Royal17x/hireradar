@@ -1,12 +1,16 @@
 package domain
 
-import "context"
+import (
+	"context"
+)
 
 type VacancyRepository interface {
 	Save(ctx context.Context, vacancy *Vacancy) error
 	Exists(ctx context.Context, hhID string) (bool, error)
 	GetAll(ctx context.Context) ([]Vacancy, error)
 	GetFiltered(ctx context.Context, keywords, city, grade string) ([]Vacancy, error)
+	GetStats(ctx context.Context) (count int, topCities []string, err error)
+	GetByHhID(ctx context.Context, hhID string) (vacancy Vacancy, err error)
 }
 
 type UserRepository interface {
@@ -18,9 +22,11 @@ type CacheRepository interface {
 	SetSeen(ctx context.Context, hhID string) error
 	IsSeen(ctx context.Context, hhID string) (bool, error)
 }
+
 type VacancyFetcher interface {
 	FetchVacancies(ctx context.Context, query string) ([]Vacancy, error)
 }
+
 type FilterRepository interface {
 	Save(ctx context.Context, filter Filter) error
 	GetByUserID(ctx context.Context, userID int) ([]Filter, error)
@@ -31,4 +37,11 @@ type FilterRepository interface {
 type AccountRepository interface {
 	Save(ctx context.Context, account Account) (int, error)
 	GetByEmail(ctx context.Context, email string) (*Account, error)
+	GetByID(ctx context.Context, id int) (*Account, error)
+}
+
+type FavoriteRepository interface {
+	Save(ctx context.Context, favorite Favorite) error
+	GetByAccountID(ctx context.Context, accountID int) ([]Favorite, error)
+	Delete(ctx context.Context, accountID int, hhID string) error
 }

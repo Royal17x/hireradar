@@ -73,6 +73,7 @@ func main() {
 	userRepo := pg.NewUserRepository(dbPool)
 	filterRepo := pg.NewFilterRepo(dbPool)
 	accountRepo := pg.NewAccountRepo(dbPool)
+	favoriteRepo := pg.NewFavoriteRepo(dbPool)
 
 	// Client
 	client := hh.New()
@@ -93,7 +94,7 @@ func main() {
 	go tgBot.Start()
 
 	//Server
-	serv := server.NewServer(ucase, userRepo, filterRepo, accountRepo, cfg.JWT.Secret)
+	serv := server.NewServer(ucase, userRepo, filterRepo, accountRepo, favoriteRepo, cfg.Parser.Query, cfg.JWT.Secret)
 	go func() {
 		if err := serv.Run(":8080"); err != nil {
 			logger.Error("Server run error", "err", err)
